@@ -1,5 +1,7 @@
 asmoutput
 asmcli
+.DS_Store
+apigee/output/
 
 # Logs
 logs

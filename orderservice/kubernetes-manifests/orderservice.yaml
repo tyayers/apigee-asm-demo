@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: orderservice
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: orderservice
+  template:
+    metadata:
+      name: orderservice
+      labels:
+        app: orderservice
+    spec:
+      initContainers:
+        - name: init
+          image: ubuntu:latest
+          command: [ '/bin/bash', '-c', "while [ ! -f /data/ready ]; do sleep 1; done" ]
+          volumeMounts:
+            - name: data
+              mountPath: "/data"
+      containers:
+        - name: orderservice
+          image: ubuntu:latest
+          command: ["/bin/bash", "-c"]
+          env:
+            - name: CHECKOUT_SERVICE
+              value: "checkoutservice.checkout.svc.cluster.local:5050"
+            - name: CART_SERVICE
+              value: "cartservice.cart.svc.cluster.local:7070"
+          args: ["./data/orderservice"]
+          ports:
+            - name: grpc
+              containerPort: 9090
+          volumeMounts:
+            - name: data
+              mountPath: "/data"
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: 'orderservice-pvc'
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: orderservice
+  labels:
+    app: orderservice
+spec:
+  ports:
+    - port: 9090
+      name: grpc
+  selector:
+    app: orderservice

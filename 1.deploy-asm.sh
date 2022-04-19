@@ -1,41 +1,38 @@
 #!/bin/bash
 
+set -e
+
 if [ -z "$PROJECT" ]
 then
-echo "No PROJECT variable set, trying to use gcloud current project..."
-export PROJECT=$(gcloud config get-value project)
-echo "PROJECT set to $PROJECT"
+echo "No PROJECT variable set"
+exit
 fi
 
 if [ -z "$LOCATION" ]
 then
-echo "No LOCATION variable set, using europe-west1..."
-export LOCATION="europe-west1-c"
+echo "No LOCATION variable set"
+exit
 fi
 
 if [ -z "$CLUSTERNAME" ]
 then
-echo "No CLUSTERNAME variable set, using 'asm-cluster'"
-export CLUSTERNAME="asm-cluster"
+echo "No CLUSTERNAME variable set"
+exit
 fi
 
 if [ -z "$GATEWAY_NAMESPACE" ]
 then
-echo "No GATEWAY_NAMESPACE variable set, using 'istio-gateway'"
-export GATEWAY_NAMESPACE="istio-gateway"
+echo "No GATEWAY_NAMESPACE variable set"
+exit
 fi
 
-echo "Enabling APIs..."
-gcloud services enable compute.googleapis.com
-gcloud services enable container.googleapis.com
-
-echo "Creating cluster..."
-gcloud container clusters create $CLUSTERNAME \
-    --project=$PROJECT \
-    --zone=$LOCATION \
-    --machine-type=e2-standard-4 \
-    --num-nodes=2 \
-    --workload-pool=$PROJECT.svc.id.goog
+#echo "Creating cluster..."
+#gcloud container clusters create $CLUSTERNAME \
+    #--project=$PROJECT \
+    #--zone=$LOCATION \
+    #--machine-type=e2-standard-4 \
+    #--num-nodes=2 \
+    #--workload-pool=$PROJECT.svc.id.goog
 
 gcloud container clusters get-credentials $CLUSTERNAME \
 --project=$PROJECT \
@@ -44,7 +41,7 @@ gcloud container clusters get-credentials $CLUSTERNAME \
 kubectl config set-context $CLUSTERNAME
 
 echo "Installing ASM..."
-curl https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.13 > asmcli
+curl -s https://storage.googleapis.com/csm-artifacts/asm/asmcli_1.13 > asmcli
 chmod +x asmcli
 
 sleep 5s
@@ -94,3 +91,6 @@ kubectl apply -f \
 
 kubectl get service "istio-ingressgateway" \
     -n $GATEWAY_NAMESPACE
+
+
+./orderservice/deploy.sh

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ProxyEndpoint name="default">
+    <FaultRules>
+        <FaultRule name="generic-error">
+            <Step>
+                <Name>AM-GenericError</Name>
+            </Step>
+        </FaultRule>
+        <FaultRule name="grpc-error">
+            <Step>
+                <Name>JS-GRPCError</Name>
+            </Step>
+            <Step>
+                <Name>AM-GRPCError</Name>
+            </Step>
+            <Condition>error.header.grpc-status isNot null</Condition>
+        </FaultRule>
+        <FaultRule name="custom-fault">
+            <!-- do nothing  -->
+            <Condition>custom_fault = true</Condition>
+        </FaultRule>
+    </FaultRules>
+    <DefaultFaultRule name="add-cors">
+        <Step>
+            <Name>CORS</Name>
+        </Step>
+    </DefaultFaultRule>
+    <PreFlow name="PreFlow">
+        <Request>
+            <Step>
+                <Name>CORS</Name>
+            </Step>
+            <Step>
+                <Name>FC-Security</Name>
+            </Step>
+            <Step>
+                <Name>OAS-ValidateRequest</Name>
+            </Step>
+        </Request>
+        <Response/>
+    </PreFlow>
+    <Flows>
+        <Flow name="post /orders">
+            <Description>Create Orders</Description>
+            <Request/>
+            <Response/>
+            <Condition>(proxy.pathsuffix MatchesPath "/orders") and (request.verb = "POST")</Condition>
+        </Flow>
+    </Flows>
+    <PostFlow name="PostFlow">
+        <Request/>
+        <Response/>
+    </PostFlow>
+    <HTTPProxyConnection>
+        <BasePath>/v1/orderservices</BasePath>
+    </HTTPProxyConnection>
+    <RouteRule name="default">
+        <TargetEndpoint>default</TargetEndpoint>
+    </RouteRule>
+</ProxyEndpoint>
